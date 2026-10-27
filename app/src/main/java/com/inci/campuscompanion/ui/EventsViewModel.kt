@@ -50,7 +50,8 @@ class EventsViewModel(private val repository: EventsRepository) : ViewModel() {
             is HttpException -> if (error.code() >= 500)
                 "The events server is unavailable. Please retry later."
             else "The events request failed (HTTP ${error.code()}). Please retry."
-            is JsonParseException, is IllegalArgumentException -> "The server returned invalid event data. Please retry."
+            is JsonParseException, is com.google.gson.stream.MalformedJsonException,
+            is IllegalArgumentException, is IllegalStateException -> "The server returned invalid event data. Please retry."
             is IOException -> "Cannot connect. Check your internet connection and retry."
             else -> "Could not load events. Please retry."
         }
