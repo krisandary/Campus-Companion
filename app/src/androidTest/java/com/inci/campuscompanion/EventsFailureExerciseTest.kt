@@ -4,6 +4,10 @@ import android.graphics.Bitmap
 import android.util.Log
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -36,6 +40,18 @@ class EventsFailureExerciseTest {
         compose.waitForIdle()
         val directory = File(instrumentation.targetContext.getExternalFilesDir(null), "exercise")
         directory.mkdirs()
+        // Capture the actual Compose app window separately from Android system overlays.
+        when (state) {
+            is EventsUiState.Error -> {
+                compose.onNodeWithText(state.message).assertIsDisplayed()
+                compose.onNodeWithText("Retry").assertIsDisplayed()
+            }
+            EventsUiState.Empty -> compose.onNodeWithText("No campus events yet. Refresh to check again.").assertIsDisplayed()
+            is EventsUiState.Content -> compose.onNodeWithText(state.events.first().title).assertIsDisplayed()
+            else -> Unit
+        }
+        val appBitmap = compose.onRoot().captureToImage().asAndroidBitmap()
+        File(directory, "${name}_app.png").outputStream().use { appBitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
         val bitmap = instrumentation.uiAutomation.takeScreenshot()
         requireNotNull(bitmap)
         File(directory, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
