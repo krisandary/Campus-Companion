@@ -60,7 +60,9 @@ class EventsTest {
             try {
                 CampusApi.create(server.url("/").toString()).getEvents()
                 fail("Expected malformed JSON to fail")
-            } catch (_: com.google.gson.JsonParseException) { }
+            } catch (e: com.google.gson.stream.MalformedJsonException) {
+                assertTrue(EventsViewModel.errorMessage(e).contains("invalid event data"))
+            }
         } finally { server.shutdown() }
     }
 
